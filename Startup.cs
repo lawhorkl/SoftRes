@@ -10,6 +10,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using SoftRes.Auth;
+using SoftRes.Config;
 
 namespace SoftRes
 {
@@ -26,6 +28,16 @@ namespace SoftRes
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+            services.AddHttpClient();
+
+            var authConfig = new AuthConfig();
+            Configuration.Bind("Auth", authConfig);
+            services.AddSingleton(authConfig);
+            services.AddSingleton<IBlizzardAuthHandler, BlizzardAuthHandler>();
+            // services.AddOptions();
+
+            // var authSection = Configuration.GetSection("Auth");
+            // services.Configure<AuthConfig>(authSection);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using SoftRes.Auth;
 using SoftRes.Models;
 
 namespace SoftRes.Controllers
@@ -7,6 +8,13 @@ namespace SoftRes.Controllers
     [Route("[controller]")]
     public class RaidController
     {
+        private IBlizzardAuthHandler _authHandler;
+
+        public RaidController(IBlizzardAuthHandler authHandler)
+        {
+            _authHandler = authHandler;
+        }
+
         public Raid Get()
         {
             return new Raid();
