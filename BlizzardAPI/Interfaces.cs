@@ -1,21 +1,14 @@
+using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
+using RestSharp;
+using SoftRes.Auth;
+using SoftRes.Models;
+
 namespace SoftRes.BlizzardAPI
 {
-    public class BlizzardItemAPI : IItemAPIItemId, IItemAPIItemLocale, IItemAPINamespace
+    public interface IItemAPIExecute
     {
-        public void ItemId(int id)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public IItemAPIItemId Locale(string locale)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public IItemAPIItemLocale Namespace(string ns)
-        {
-            throw new System.NotImplementedException();
-        }
+        Task<Item> Execute();
     }
 
     public interface IItemAPINamespace
@@ -25,11 +18,11 @@ namespace SoftRes.BlizzardAPI
 
     public interface IItemAPIItemId
     {
-        void ItemId(int id);
+        IItemAPINamespace ItemId(int id);
     }
 
     public interface IItemAPIItemLocale
     {
-        IItemAPIItemId Locale(string locale);
+        IItemAPIExecute Locale(string locale);
     }
 }

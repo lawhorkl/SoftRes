@@ -11,7 +11,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SoftRes.Auth;
+using SoftRes.BlizzardAPI;
 using SoftRes.Config;
+using SoftRes.Loaders;
 
 namespace SoftRes
 {
@@ -30,10 +32,13 @@ namespace SoftRes
             services.AddControllers();
             services.AddHttpClient();
 
-            var authConfig = new AuthConfig();
-            Configuration.Bind("Auth", authConfig);
-            services.AddSingleton(authConfig);
+            var applicationConfig = new ApplicationConfig();
+            Configuration.Bind("Application", applicationConfig);
+            services.AddSingleton(applicationConfig);
+
+            services.AddTransient<IBlizzardItemAPI, BlizzardItemAPI>();
             services.AddSingleton<IBlizzardAuthHandler, BlizzardAuthHandler>();
+            services.AddHostedService<ItemLoader>();
             // services.AddOptions();
 
             // var authSection = Configuration.GetSection("Auth");

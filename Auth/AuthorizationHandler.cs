@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using RestSharp;
 using RestSharp.Authenticators;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace SoftRes.Auth
 {
@@ -25,13 +26,13 @@ namespace SoftRes.Auth
     
     public class BlizzardAuthHandler : IBlizzardAuthHandler
     {
-        private AuthConfig _config;
+        private ApplicationConfig _config;
         private IHttpClientFactory _clientFactory;
         private string _accessToken;
         private int _expires;
 
         public BlizzardAuthHandler(
-            AuthConfig config,
+            ApplicationConfig config,
             IHttpClientFactory clientFactory
         )
         {
@@ -43,12 +44,12 @@ namespace SoftRes.Auth
         {
             if (String.IsNullOrEmpty(_accessToken))
             {
-                var client = new RestClient(_config.Uri);
-                client.Authenticator = new HttpBasicAuthenticator(_config.ClientId, _config.ClientSecret);
+                var client = new RestClient(_config.Auth.Uri);
+                client.Authenticator = new HttpBasicAuthenticator(_config.Auth.ClientId, _config.Auth.ClientSecret);
                 var request = new RestRequest(Method.POST);
                 var basicAuth = Convert.ToBase64String(
                     Encoding.UTF8.GetBytes(
-                        $"{_config.ClientId}:{_config.ClientSecret}"
+                        $"{_config.Auth.ClientId}:{_config.Auth.ClientSecret}"
                     )
                 );
                 var headers = new List<(string, string)>
@@ -71,8 +72,18 @@ namespace SoftRes.Auth
 
                 if (response.IsSuccessful)
                 {
+                    var contractResolver = new DefaultContractResolver
+                    {
+                        NamingStrategy = new SnakeCaseNamingStrategy()
+                    };
                     var deserializedResonse = 
-                        JsonConvert.DeserializeObject<AccessTokenResponse>(response.Content);
+                        JsonConvert.DeserializeObject<AccessTokenResponse>(
+                            response.Content, 
+                            new JsonSerializerSettings
+                            {
+                                ContractResolver = contractResolver
+                            }
+                        );
 
                     _expires = deserializedResonse.ExpiresIn;
                     _accessToken = deserializedResonse.AccessToken;
