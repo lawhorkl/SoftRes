@@ -7,8 +7,8 @@ namespace SoftRes.Models
     {
         public List<Raider> Raiders { get; set; } = 
             new List<Raider>();
-        public List<Item> Drops { get; set; } =
-            new List<Item>();
+        public List<Drop> Drops { get; set; } =
+            new List<Drop>();
         public DateTime Time { get; set; } =
             new DateTime();
     }
@@ -19,8 +19,26 @@ namespace SoftRes.Models
         public IPlayerClass Class { get; set; }
     }
 
+    public enum ItemQuality
+    {
+        Poor,
+        Common,
+        Uncommon,
+        Rare,
+        Epic,
+        Legendary
+    }
+
     public class Item
     {
+        public int Id;
+        public string Name;
+        public ItemQuality Quality;
+    }
+
+    public class Drop
+    {
+        public Item Item { get; set; }
         public List<Raider> Reservers { get; set; } = 
             new List<Raider>();
     }
