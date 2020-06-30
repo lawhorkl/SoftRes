@@ -3,6 +3,14 @@ using System.Collections.Generic;
 
 namespace SoftRes.Models
 {
+    public enum RaidInstance
+    {
+        MoltenCore,
+        BlackwingLair,
+        ZulGurub,
+        AhnQuiraj
+    }
+
     public class Raid
     {
         public List<Raider> Raiders { get; set; } = 
@@ -11,6 +19,7 @@ namespace SoftRes.Models
             new List<Drop>();
         public DateTime Time { get; set; } =
             new DateTime();
+        public RaidInstance Instance { get; set; }
     }
 
     public class Raider
@@ -34,6 +43,7 @@ namespace SoftRes.Models
         public int Id;
         public string Name;
         public ItemQuality Quality;
+        public RaidInstance Instance;
     }
 
     public class Drop

@@ -1,18 +1,28 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using RestSharp;
 using SoftRes.Auth;
 using SoftRes.Config;
 using SoftRes.Models;
 
-namespace SoftRes.BlizzardAPI
+namespace SoftRes.BlizzardAPI.Items
 {
+    public class ItemQualityResponse
+    {
+        [JsonConverter(typeof(StringEnumConverter))]
+        public ItemQuality Name;
+    }
+
     public class ItemResponse
     {
         public int Id;
         public string Name;
+        public ItemQualityResponse Quality;
     }
 
     public interface IBlizzardItemAPI : IItemAPIItemId {}
@@ -25,8 +35,7 @@ namespace SoftRes.BlizzardAPI
     {
         private readonly IBlizzardAuthHandler _handler;
         private RestClient _client;
-        private List<Parameter> _parameters = new List<Parameter>();
-        private int _itemId = 0;
+        private RestRequest _request;
 
         public BlizzardItemAPI(IBlizzardAuthHandler handler, ApplicationConfig config)
         {
@@ -39,19 +48,8 @@ namespace SoftRes.BlizzardAPI
             var token = await _handler.AccessToken();
             if (!String.IsNullOrEmpty(token))
             {
-                var request = new RestRequest(
-                $"/data/wow/item/{_itemId}", 
-                Method.GET
-                );
-
-                foreach (var parameter in _parameters)
-                {
-                    request.AddParameter(parameter);
-                }
-
-                request.AddParameter("access_token", token);
-
-                var response = await _client.ExecuteAsync(request);
+                _request.AddParameter("access_token", token, ParameterType.QueryString);
+                var response = await _client.ExecuteAsync(_request);
                 
                 if (response.IsSuccessful)
                 {
@@ -59,7 +57,9 @@ namespace SoftRes.BlizzardAPI
 
                     return new Item
                     {
-                        Id = item.Id
+                        Id = item.Id,
+                        Name = item.Name,
+                        Quality = item.Quality.Name
                     };
                 }
 
@@ -71,7 +71,10 @@ namespace SoftRes.BlizzardAPI
 
         public IItemAPINamespace ItemId(int id)
         {
-            _itemId = id;
+            _request = new RestRequest(
+                $"/data/wow/item/{id}",
+                Method.GET
+            );
 
             return this;
         }
@@ -80,11 +83,11 @@ namespace SoftRes.BlizzardAPI
         {
             if (!String.IsNullOrEmpty(locale))
             {
-                _parameters.Add(
+                _request.AddParameter(
                     new Parameter(
-                        "locale", 
-                        locale, 
-                        ParameterType.UrlSegment
+                        "locale",
+                        locale,
+                        ParameterType.QueryString
                     )
                 );
 
@@ -98,11 +101,11 @@ namespace SoftRes.BlizzardAPI
         {
             if (!String.IsNullOrEmpty(ns))
             {
-                _parameters.Add(
+                _request.AddParameter(
                     new Parameter(
-                        "namespace", 
-                        ns, 
-                        ParameterType.UrlSegment
+                        "namespace",
+                        ns,
+                        ParameterType.QueryString
                         )
                 );
 
@@ -111,5 +114,25 @@ namespace SoftRes.BlizzardAPI
 
             throw new ArgumentNullException("Namespace string cannot be null.");
         }
+    }
+
+    public interface IItemAPIExecute
+    {
+        Task<Item> Execute();
+    }
+
+    public interface IItemAPINamespace
+    {
+        IItemAPIItemLocale Namespace(string ns);
+    }
+
+    public interface IItemAPIItemId
+    {
+        IItemAPINamespace ItemId(int id);
+    }
+
+    public interface IItemAPIItemLocale
+    {
+        IItemAPIExecute Locale(string locale);
     }
 }
