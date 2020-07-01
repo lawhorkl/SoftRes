@@ -8,14 +8,14 @@ namespace SoftRes.Loaders
 {
     public interface IFileLoader
     {
-        Dictionary<RaidInstance, string[]> GetIDs();
+        Dictionary<RaidInstance, List<string>> GetIDs();
     }
 
     public class FileLoader : IFileLoader
     {
-        private Dictionary<RaidInstance, string[]> _instanceToId =
-            new Dictionary<RaidInstance, string[]>();
-        public Dictionary<RaidInstance, string[]> GetIDs()
+        private Dictionary<RaidInstance, List<string>> _instanceToId =
+            new Dictionary<RaidInstance, List<string>>();
+        public Dictionary<RaidInstance, List<string>> GetIDs()
         {
             var idsPath = "IDs";
             var fileNames = Directory.GetFiles(idsPath)
@@ -34,6 +34,8 @@ namespace SoftRes.Loaders
                     _instanceToId.Add(
                         (RaidInstance) instance,
                         File.ReadAllLines(String.Join('/', idsPath, fileName))
+                            .Distinct()
+                            .ToList()
                     );
                 }
             }

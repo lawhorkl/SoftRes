@@ -34,17 +34,28 @@ namespace SoftRes
             Configuration.Bind("Application", applicationConfig);
             services.AddSingleton(applicationConfig);
 
+            // With SharpMongo ORM Layer we never directly DI MongoClient
+            // anywhere else and creating a new interface just to DI
+            // a connection string is kind of silly.
+            MongoClient client;
             if (inMemory)
             {
                 var runner = MongoDbRunner.Start();
-                services.AddTransient<IMongoFactory, MongoFactory>(_ =>
-                    new MongoFactory(
-                        new MongoClient(runner.ConnectionString), 
-                        "softres"
-                    )
-                );
+                client = new MongoClient(runner.ConnectionString);
             }
-
+            else
+            {
+                var connectionString = Configuration.GetValue<string>("MongoDB:ConnectionString");
+                client = new MongoClient(connectionString);
+            }
+            var dbName = Configuration.GetValue<string>("MongoDB:DatabaseName");
+            services.AddTransient<IMongoFactory, MongoFactory>(_ =>
+                new MongoFactory(
+                    client, 
+                    dbName
+                )
+            );
+            
             services.AddTransient<IBlizzardItemAPI, BlizzardItemAPI>();
             services.AddSingleton<IBlizzardAuthHandler, BlizzardAuthHandler>();
             services.AddTransient<IFileLoader, FileLoader>();
