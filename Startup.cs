@@ -31,11 +31,8 @@ namespace SoftRes
 
             services.AddTransient<IBlizzardItemAPI, BlizzardItemAPI>();
             services.AddSingleton<IBlizzardAuthHandler, BlizzardAuthHandler>();
+            services.AddTransient<IFileLoader, FileLoader>();
             services.AddHostedService<ItemLoader>();
-            // services.AddOptions();
-
-            // var authSection = Configuration.GetSection("Auth");
-            // services.Configure<AuthConfig>(authSection);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

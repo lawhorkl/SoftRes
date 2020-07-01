@@ -8,6 +8,7 @@ using Microsoft.Extensions.Hosting;
 using SoftRes.Auth;
 using SoftRes.BlizzardAPI.Items;
 using SoftRes.Models;
+using SoftRes.Helpers;
 
 namespace SoftRes.Loaders
 {
@@ -15,41 +16,41 @@ namespace SoftRes.Loaders
     {
         private readonly IBlizzardAuthHandler _authHandler;
         private readonly IBlizzardItemAPI _itemApiClient;
+        private readonly IFileLoader _fileLoader;
         private string[] _mcItemIds;
 
         public ItemLoader(
             IBlizzardAuthHandler authHandler, 
-            IBlizzardItemAPI itemApiClient
+            IBlizzardItemAPI itemApiClient,
+            IFileLoader fileLoader
         )
         {
             _authHandler = authHandler;
             _itemApiClient = itemApiClient;
-
-            var workingDirectory = Directory.GetCurrentDirectory();
-            var fileName = "MC.txt";
-            var path = String.Join('/', workingDirectory, "IDs", fileName);
-            _mcItemIds = File.ReadAllLines(path).Distinct().ToArray();
-            
-            var test = "";
+            _fileLoader = fileLoader;
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             var items = new List<Item>();
+            var allIds = _fileLoader.GetIDs();
 
-            foreach (var id in _mcItemIds)
+            foreach (var raidName in EnumHelpers.ToEnumerable<RaidInstance>())
             {
-                var item = Item(
-                    await _itemApiClient
-                        .ItemId(Convert.ToInt32(id))
-                        .Namespace("static-classic-us")
-                        .Locale("en_US")
-                        .Execute(), 
-                    RaidInstance.MoltenCore
-                );
-                items.Add(item);
+                foreach (var itemId in allIds[raidName])
+                {
+                    var item = Item(
+                        await _itemApiClient
+                            .ItemId(Convert.ToInt32(itemId))
+                            .Namespace("static-classic-us")
+                            .Locale("en_US")
+                            .Execute(), 
+                        raidName
+                    );
+                    items.Add(item);
 
-                Console.WriteLine($"Item: {item.Name} imported.");
+                    Console.WriteLine($"Item: {item.Name} imported.");
+                }
             }
 
             var test = "";
