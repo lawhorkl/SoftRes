@@ -3,10 +3,14 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Mongo2Go;
+using MongoDB.Driver;
 using SoftRes.Auth;
 using SoftRes.BlizzardAPI.Items;
 using SoftRes.Config;
 using SoftRes.Loaders;
+using SoftRes.SharpMongo;
+using SoftRes.db;
 
 namespace SoftRes
 {
@@ -22,12 +26,24 @@ namespace SoftRes
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            bool inMemory = Configuration.GetValue<bool>("MongoDB:InMemory");
             services.AddControllers();
             services.AddHttpClient();
 
             var applicationConfig = new ApplicationConfig();
             Configuration.Bind("Application", applicationConfig);
             services.AddSingleton(applicationConfig);
+
+            if (inMemory)
+            {
+                var runner = MongoDbRunner.Start();
+                services.AddTransient<IMongoFactory, MongoFactory>(_ =>
+                    new MongoFactory(
+                        new MongoClient(runner.ConnectionString), 
+                        "softres"
+                    )
+                );
+            }
 
             services.AddTransient<IBlizzardItemAPI, BlizzardItemAPI>();
             services.AddSingleton<IBlizzardAuthHandler, BlizzardAuthHandler>();

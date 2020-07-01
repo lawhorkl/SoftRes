@@ -9,6 +9,8 @@ using SoftRes.Auth;
 using SoftRes.BlizzardAPI.Items;
 using SoftRes.Models;
 using SoftRes.Helpers;
+using SoftRes.db;
+using SoftRes.SharpMongo;
 
 namespace SoftRes.Loaders
 {
@@ -17,43 +19,58 @@ namespace SoftRes.Loaders
         private readonly IBlizzardAuthHandler _authHandler;
         private readonly IBlizzardItemAPI _itemApiClient;
         private readonly IFileLoader _fileLoader;
-        private string[] _mcItemIds;
-
+        private readonly IMongoFactory _factory;
         public ItemLoader(
             IBlizzardAuthHandler authHandler, 
             IBlizzardItemAPI itemApiClient,
-            IFileLoader fileLoader
+            IFileLoader fileLoader,
+            IMongoFactory factory
         )
         {
             _authHandler = authHandler;
             _itemApiClient = itemApiClient;
             _fileLoader = fileLoader;
+            _factory = factory;
         }
 
-        public async Task StartAsync(CancellationToken cancellationToken)
+        public Task StartAsync(CancellationToken cancellationToken)
         {
+            Task.Run(() => DoWorkAsync(cancellationToken));
+
+            return Task.CompletedTask;
+        }
+
+        public async Task DoWorkAsync(CancellationToken cancellationToken)
+        {
+            // Bug with IHostedService
+            await Task.Yield();
+
             var items = new List<Item>();
             var allIds = _fileLoader.GetIDs();
 
             foreach (var raidName in EnumHelpers.ToEnumerable<RaidInstance>())
             {
-                foreach (var itemId in allIds[raidName])
+                if (allIds.ContainsKey(raidName))
                 {
-                    var item = Item(
-                        await _itemApiClient
-                            .ItemId(Convert.ToInt32(itemId))
-                            .Namespace("static-classic-us")
-                            .Locale("en_US")
-                            .Execute(), 
-                        raidName
-                    );
-                    items.Add(item);
+                    foreach (var itemId in allIds[raidName])
+                    {
+                        var item = Item(
+                            await _itemApiClient
+                                .ItemId(Convert.ToInt32(itemId))
+                                .Namespace("static-classic-us")
+                                .Locale("en_US")
+                                .Execute(), 
+                            raidName
+                        );
 
+                    items.Add(item);
                     Console.WriteLine($"Item: {item.Name} imported.");
+                    }
                 }
             }
 
-            var test = "";
+            _factory.Item.CreateMany(items);
+            Console.WriteLine("Finished ingesting item data.");
         }
 
         public Task StopAsync(CancellationToken cancellationToken)

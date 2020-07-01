@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+using MongoDB.Bson;
+using SoftRes.SharpMongo;
+using MongoDB.Driver;
 
 namespace SoftRes.Models
 {
@@ -38,9 +41,10 @@ namespace SoftRes.Models
         Legendary
     }
 
-    public class Item
+    public class Item : IObjectId
     {
-        public int Id;
+        public ObjectId Id { get; set; }
+        public int ItemId;
         public string Name;
         public ItemQuality Quality;
         public RaidInstance Instance;

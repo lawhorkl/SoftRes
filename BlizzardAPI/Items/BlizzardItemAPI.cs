@@ -8,6 +8,7 @@ using Newtonsoft.Json.Converters;
 using RestSharp;
 using SoftRes.Auth;
 using SoftRes.Config;
+using SoftRes.db;
 using SoftRes.Models;
 
 namespace SoftRes.BlizzardAPI.Items
@@ -37,7 +38,10 @@ namespace SoftRes.BlizzardAPI.Items
         private RestClient _client;
         private RestRequest _request;
 
-        public BlizzardItemAPI(IBlizzardAuthHandler handler, ApplicationConfig config)
+        public BlizzardItemAPI(
+            IBlizzardAuthHandler handler, 
+            ApplicationConfig config
+        )
         {
             _handler = handler;
             _client = new RestClient(config.GameDataAPI.Uri);
@@ -57,7 +61,7 @@ namespace SoftRes.BlizzardAPI.Items
 
                     return new Item
                     {
-                        Id = item.Id,
+                        ItemId = item.Id,
                         Name = item.Name,
                         Quality = item.Quality.Name
                     };
