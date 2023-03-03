@@ -6,7 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="Mongo2Go" Version="2.2.12" />
-    <PackageReference Include="MongoDB.Driver" Version="2.10.4" />
+    <PackageReference Include="MongoDB.Driver" Version="2.19.0" />
     <PackageReference Include="Newtonsoft.json" Version="12.0.3" />
     <PackageReference Include="RestSharp" Version="106.11.4" />
   </ItemGroup>
